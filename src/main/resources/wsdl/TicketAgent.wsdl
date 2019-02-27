@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<wsdl:definitions targetNamespace="http://example.org/TicketAgent.wsdl11"
+                  xmlns:tns="http://example.org/TicketAgent.wsdl11"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:xsTicketAgent="http://example.org/TicketAgent.xsd"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xsi:schemaLocation="http://schemas.xmlsoap.org/wsdl/ http://www.w3.org/TR/2001/NOTE-wsdl-20010315/wsdl11.xsd">
+
+    <!-- http://example.org/TicketAgent.wsdl11#wsd11.definitions() -->
+
+    <wsdl:types>
+        <xs:schema xmlns:xsTicketAgent="http://example.org/TicketAgent.xsd"
+                   targetNamespace="http://example.org/TicketAgent.xsd">
+            <xs:element name="listFlightsRequest" type="xsTicketAgent:tListFlights"/>
+            <xs:complexType name="tListFlights">
+                <xs:sequence>
+                    <xs:element name="travelDate" type="xs:date"/>
+                    <xs:element name="startCity" type="xs:string"/>
+                    <xs:element name="endCity" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:element name="listFlightsResponse" type="xsTicketAgent:tFlightsResponse"/>
+            <xs:complexType name="tFlightsResponse">
+                <xs:sequence>
+                    <xs:element name="flightNumber" type="xs:integer" minOccurs="0"
+                                maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+    </wsdl:types>
+
+    <wsdl:message name="listFlightsRequest">
+        <!-- Starting from here, http://example.org/TicketAgent.wsdl11 will be shortened to http://... -->
+        <!-- http://...#wsdl11.message(listFlightsRequest) -->
+        <wsdl:part name="body" element="xsTicketAgent:listFlightsRequest"/>
+        <!-- http://...#wsdl11.messagePart(listFlightsRequest/body) -->
+    </wsdl:message>
+
+    <wsdl:message name="listFlightsResponse">
+        <!-- http://...#wsdl11.message(listFlightsResponse) -->
+        <wsdl:part name="body" element="xsTicketAgent:listFlightsResponse"/>
+        <!-- http://...#wsdl11.messagePart(listFlightsResponse/body) -->
+    </wsdl:message>
+
+    <wsdl:portType name="TicketAgent">
+        <!-- http://...#wsdl11.portType(TicketAgent) -->
+        <wsdl:operation name="listFlights">
+            <!-- http://...#wsdl11.portTypeOperation(TicketAgent/listFlights) -->
+            <wsdl:input message="tns:listFlightsRequest"/>
+            <!-- http://...#wsdl11.portTypeOperation.input(TicketAgent/listFlights) -->
+            <wsdl:output message="tns:listFlightsResponse"/>
+            <!-- http://...#wsdl11.portTypeOperation.output(TicketAgent/listFlights) -->
+        </wsdl:operation>
+    </wsdl:portType>
+
+    <wsdl:binding name="TicketAgentSoap" type="tns:TicketAgent">
+        <!-- http://...#wsdl11.binding(TicketAgentSoap) -->
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <!-- http://...#wsdl11.extension(http://schemas.xmlsoap.org/wsdl/soap/,
+             w11soap.binding( wsdl11.binding(TicketAgentSoap)) -->
+        <wsdl:operation name="listFlights">
+            <!-- http://...#wsdl11.bindingOperation(TicketAgentSoap/listFlights) -->
+            <wsdl:input>
+                <!-- http://...#wsdl11.bindingOperation.input(TicketAgentSoap/listFlights) -->
+                <soap:body parts="body" use="literal"/>
+                <!-- http://...#wsdl11.extension(http://schemas.xmlsoap.org/wsdl/soap/,
+                               w11soap.body(wsdl11.bindingOperation.input
+                                           (TicketAgentSoap/listFlights)) -->
+            </wsdl:input>
+            <wsdl:output>
+                <!-- http://...#wsdl11.bindingOperation.output(TicketAgentSoap/listFlights) -->
+                <soap:body parts="body" use="literal"/>
+                <!-- http://...#wsdl11.extension(http://schemas.xmlsoap.org/wsdl/soap/,
+                               w11soap.body(wsdl11.bindingOperation.output
+                                           (TicketAgentSoap/listFlights)) -->
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+
+</wsdl:definitions>
