@@ -1,16 +1,19 @@
 package by.pr.basicsoapconsumer;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.ws.client.core.WebServiceTemplate;
-import org.springframework.ws.soap.security.support.KeyStoreFactoryBean;
-import org.springframework.ws.soap.security.support.TrustManagersFactoryBean;
-import org.springframework.ws.transport.http.HttpsUrlConnectionMessageSender;
+import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
-import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 
 @Configuration
 public class ClientConfig {
@@ -40,48 +43,33 @@ public class ClientConfig {
         webServiceTemplate.setUnmarshaller(jaxb2Marshaller());
         webServiceTemplate.setDefaultUri(defaultUri);
         // set a httpsUrlConnectionMessageSender to handle the HTTPS session
-        webServiceTemplate.setMessageSender(httpsUrlConnectionMessageSender());
+        webServiceTemplate.setMessageSender(httpComponentsMessageSender());
 
         return webServiceTemplate;
     }
 
     @Bean
-    public HttpsUrlConnectionMessageSender httpsUrlConnectionMessageSender() throws Exception {
-        HttpsUrlConnectionMessageSender httpsUrlConnectionMessageSender =
-                new HttpsUrlConnectionMessageSender();
-        httpsUrlConnectionMessageSender.setTrustManagers(trustManagersFactoryBean().getObject());
-        // allows the client to skip host name verification as otherwise following error is thrown:
-        // java.security.cert.CertificateException: No name matching localhost found
-        httpsUrlConnectionMessageSender.setHostnameVerifier(new HostnameVerifier() {
-            @Override
-            public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
-                if ("localhost".equals(hostname)) {
-                    return true;
-                }
-                return false;
-            }
-        });
+    public HttpComponentsMessageSender httpComponentsMessageSender() throws Exception {
+        HttpComponentsMessageSender httpComponentsMessageSender = new HttpComponentsMessageSender();
+        httpComponentsMessageSender.setHttpClient(httpClient());
 
-        return httpsUrlConnectionMessageSender;
+        return httpComponentsMessageSender;
     }
 
-    @Bean
-    public KeyStoreFactoryBean trustStore() {
-        KeyStoreFactoryBean keyStoreFactoryBean = new KeyStoreFactoryBean();
-        keyStoreFactoryBean.setLocation(trustStore);
-        keyStoreFactoryBean.setPassword(trustStorePassword);
-
-        return keyStoreFactoryBean;
+    private HttpClient httpClient() throws Exception {
+        return HttpClientBuilder.create().setSSLSocketFactory(sslConnectionSocketFactory())
+                .addInterceptorFirst(new HttpComponentsMessageSender.RemoveSoapHeadersInterceptor()).build();
     }
 
-
-    @Bean
-    public TrustManagersFactoryBean trustManagersFactoryBean() {
-        TrustManagersFactoryBean trustManagersFactoryBean = new TrustManagersFactoryBean();
-        trustManagersFactoryBean.setKeyStore(trustStore().getObject());
-
-        return trustManagersFactoryBean;
+    private SSLConnectionSocketFactory sslConnectionSocketFactory() throws Exception {
+        // NoopHostnameVerifier essentially turns hostname verification off as otherwise following error
+        // is thrown: java.security.cert.CertificateException: No name matching localhost found
+        return new SSLConnectionSocketFactory(sslContext(), NoopHostnameVerifier.INSTANCE);
     }
 
+    private SSLContext sslContext() throws Exception {
+        return SSLContextBuilder.create()
+                .loadTrustMaterial(trustStore.getFile(), trustStorePassword.toCharArray()).build();
+    }
 
 }
