@@ -27,6 +27,14 @@ public class ClientConfig {
     @Value("${client.ssl.trust-store-password}")
     private String trustStorePassword;
 
+    @Value("${client.ssl.key-store}")
+    private Resource keyStore;
+
+    @Value("${client.ssl.key-store-password}")
+    private String keyStorePassword;
+
+    @Value("${client.ssl.key-password}")
+    private String keyPassword;
 
     @Bean
     Jaxb2Marshaller jaxb2Marshaller() {
@@ -42,7 +50,6 @@ public class ClientConfig {
         webServiceTemplate.setMarshaller(jaxb2Marshaller());
         webServiceTemplate.setUnmarshaller(jaxb2Marshaller());
         webServiceTemplate.setDefaultUri(defaultUri);
-        // set a httpsUrlConnectionMessageSender to handle the HTTPS session
         webServiceTemplate.setMessageSender(httpComponentsMessageSender());
 
         return webServiceTemplate;
@@ -69,6 +76,8 @@ public class ClientConfig {
 
     private SSLContext sslContext() throws Exception {
         return SSLContextBuilder.create()
+                .loadKeyMaterial(keyStore.getFile(), keyStorePassword.toCharArray(),
+                        keyPassword.toCharArray())
                 .loadTrustMaterial(trustStore.getFile(), trustStorePassword.toCharArray()).build();
     }
 
